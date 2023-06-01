@@ -1,66 +1,109 @@
+class TempoTracker {
+    private timestamps = [new Date(), new Date(), new Date(), new Date(), new Date(), new Date(), new Date(), new Date()];
+    private i: number = 0;
+    private readonly msPerMin: number = 60_000;
 
-const bpmPad: HTMLElement | null = document.querySelector(".bpm-pad");
-const bpmText: HTMLElement | null = document.querySelector(".bpm-text");
+    public addTimeStamp(): void {
+        const d: Date = new Date();
+        const prev: Date = this.timestamps[this.i];
+        const difference: number = d.getTime() - prev.getTime();
 
-const timestamps = [new Date(), new Date(), new Date(), new Date(), new Date(), new Date(), new Date(), new Date()];
-var position = 0;
+        if (difference > 100) {
+            this.i = (this.i + 1) % this.timestamps.length;
+            this.timestamps[this.i] = d;
+        }
+    }
 
 
-function SubmitNewTime()
-{
-    const d = new Date();
-    var prev: Date = timestamps[position];
+    private reasonableTimeDifference(timeDiff: number): boolean {
 
-    const difference: number = d.getTime() - prev.getTime()
+        if (100 < timeDiff && timeDiff < 3000) {
+            return true;
+        }
 
-    console.log(`comparing ${d.getTime()} and ${prev.getTime()}`)
+        return false;
+    }
 
-    if (difference < 2000){
-        const estimate = takeAverageBPM();
-        if (bpmText){
+    private getAverageDifference(): number {
+        let count = 0;
+        let total = 0;
+
+        let i = (this.i - 1 + this.timestamps.length) % this.timestamps.length;
+        let j = this.i;
+
+        for (let r = 0; r < 8; r++) {
+            const a: Date | undefined = this.timestamps[i];
+            const b: Date | undefined = this.timestamps[j];
+
+            if (a && b) {
+                const timeDiff: number = b.getTime() - a.getTime();
+                if (this.reasonableTimeDifference(timeDiff)) {
+                    count += 1;
+                    total += timeDiff;
+                } else {
+                    break;
+                }
+            }
+
+            i = (i - 1 + this.timestamps.length) % this.timestamps.length;
+            j = (j - 1 + this.timestamps.length) % this.timestamps.length;
+        }
+
+        if (count < 2) {
+            return 0;
+        }
+
+        const averageDifference = total / count;
+        return averageDifference;
+    }
+
+    public getTempoEstimate(): string {
+        const averageDifference = this.getAverageDifference();
+
+        if (averageDifference === 0) {
+            return "--";
+        }
+
+        const beatsPerMinute: number = this.msPerMin / averageDifference;
+        const estimate: number = Math.round(beatsPerMinute);
+
+        return estimate.toString();
+    }
+}
+
+
+class TempoPad {
+
+    private tracker: TempoTracker = new TempoTracker();
+
+    constructor(element: HTMLElement) {
+
+        element.addEventListener("click", () => {
+            console.log("hello world");
+            this.SubmitNewTime();
+        })
+    }
+
+    private SubmitNewTime() {
+
+        this.tracker.addTimeStamp();
+        const estimate: string = this.tracker.getTempoEstimate();
+        this.UpdateText(estimate);
+    }
+
+    private UpdateText(estimate: string) {
+
+        const bpmText: HTMLElement | null = document.querySelector(".bpm-text");
+        if (bpmText) {
             bpmText.innerHTML = `${estimate}`;
         }
     }
-
-    position = (position + 1) % 8;
-    timestamps[position] = d;
 }
 
 
-function takeAverageBPM(){
+const bpmPad: HTMLElement | null = document.querySelector(".bpm-pad");
 
-    var start = (position + 9) % 8;
-
-    var count = 0;
-    var total = 0;
-
-    for(var i = start; i < start+7; i++){
-        var a : Date = timestamps[i % 8];
-        var b : Date = timestamps[(i + 1) % 8];
-
-        var timeDiff : number = b.getTime() - a.getTime();
-
-        if (100 < timeDiff && timeDiff < 3000){
-            count += 1;
-            total += timeDiff;
-        }
-    }
-
-    if (count < 2){
-        return "--"
-    }
-
-    var averageDifference = total / count;
-
-    const millisecondsPerMinute = 60000;
-    console.log(`dividing ${millisecondsPerMinute} by ${averageDifference}`)
-    return Math.round(millisecondsPerMinute/averageDifference);
-}
-
-if (bpmPad){
-    bpmPad.addEventListener("click", () => {
-        console.log("hello world");
-        SubmitNewTime();
-    })
+if (bpmPad) {
+    new TempoPad(bpmPad);
 }
 
