@@ -8,10 +8,12 @@ var TempoTracker = /** @class */ (function () {
         var d = new Date();
         var prev = this.timestamps[this.i];
         var difference = d.getTime() - prev.getTime();
-        if (difference > 100) {
+        if (difference > 50) {
             this.i = (this.i + 1) % this.timestamps.length;
             this.timestamps[this.i] = d;
+            return true;
         }
+        return false;
     };
     TempoTracker.prototype.reasonableTimeDifference = function (timeDiff) {
         if (100 < timeDiff && timeDiff < 3000) {
@@ -67,9 +69,19 @@ var TempoPad = /** @class */ (function () {
         });
     }
     TempoPad.prototype.SubmitNewTime = function () {
-        this.tracker.addTimeStamp();
-        var estimate = this.tracker.getTempoEstimate();
-        this.UpdateText(estimate);
+        if (this.tracker.addTimeStamp()) {
+            // this.PlaySound();
+            var estimate = this.tracker.getTempoEstimate();
+            this.UpdateText(estimate);
+        }
+        this.PlaySound();
+    };
+    TempoPad.prototype.PlaySound = function () {
+        var element = document.getElementById("tap-low");
+        if (element instanceof HTMLAudioElement) {
+            element.pause();
+            element.play();
+        }
     };
     TempoPad.prototype.UpdateText = function (estimate) {
         var bpmText = document.querySelector(".bpm-text");

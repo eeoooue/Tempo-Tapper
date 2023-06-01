@@ -3,15 +3,18 @@ class TempoTracker {
     private i: number = 0;
     private readonly msPerMin: number = 60_000;
 
-    public addTimeStamp(): void {
+    public addTimeStamp(): boolean {
         const d: Date = new Date();
         const prev: Date = this.timestamps[this.i];
         const difference: number = d.getTime() - prev.getTime();
 
-        if (difference > 100) {
+        if (difference > 50) {
             this.i = (this.i + 1) % this.timestamps.length;
             this.timestamps[this.i] = d;
+            return true;
         }
+
+        return false;
     }
 
 
@@ -86,9 +89,23 @@ class TempoPad {
 
     private SubmitNewTime() {
 
-        this.tracker.addTimeStamp();
-        const estimate: string = this.tracker.getTempoEstimate();
-        this.UpdateText(estimate);
+        if (this.tracker.addTimeStamp()) {
+            // this.PlaySound();
+            const estimate: string = this.tracker.getTempoEstimate();
+            this.UpdateText(estimate);
+        }
+
+        this.PlaySound();
+    }
+
+    private PlaySound() {
+
+        const element: HTMLElement | null = document.getElementById("tap-low");
+
+        if (element instanceof HTMLAudioElement) {
+            element.pause();
+            element.play();
+        }
     }
 
     private UpdateText(estimate: string) {
