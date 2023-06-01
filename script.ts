@@ -25,7 +25,7 @@ class TempoTracker {
             }
         }
 
-        return (100 < timeDiff && timeDiff < 3000);
+        return (200 <= timeDiff && timeDiff <= 2000);
     }
 
     private getAverageDifference(): number {
