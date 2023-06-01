@@ -15,13 +15,18 @@ class TempoTracker {
     }
 
 
-    private reasonableTimeDifference(timeDiff: number): boolean {
+    private reasonableTimeDifference(timeDiff: number, previousInterval: number | undefined): boolean {
 
-        if (100 < timeDiff && timeDiff < 3000) {
-            return true;
+        if (previousInterval) {
+            var percentage: number = 100 * timeDiff / previousInterval;
+            var percentageDifference: number = Math.abs(percentage - 100);
+
+            if (percentageDifference > 30) {
+                return false;
+            }
         }
 
-        return false;
+        return (100 < timeDiff && timeDiff < 3000);
     }
 
     private getAverageDifference(): number {
@@ -31,17 +36,19 @@ class TempoTracker {
         let i = (this.i - 1 + this.timestamps.length) % this.timestamps.length;
         let j = this.i;
 
+        var previousInterval: number | undefined;
+
         for (let r = 0; r < 8; r++) {
             const a: Date | undefined = this.timestamps[i];
             const b: Date | undefined = this.timestamps[j];
 
             if (a && b) {
                 const timeDiff: number = b.getTime() - a.getTime();
-                if (this.reasonableTimeDifference(timeDiff)) {
+
+                if (this.reasonableTimeDifference(timeDiff, previousInterval)) {
                     count += 1;
                     total += timeDiff;
-                } else {
-                    break;
+                    previousInterval = timeDiff;
                 }
             }
 
@@ -49,7 +56,7 @@ class TempoTracker {
             j = (j - 1 + this.timestamps.length) % this.timestamps.length;
         }
 
-        if (count < 2) {
+        if (count < 1) {
             return 0;
         }
 
@@ -61,7 +68,7 @@ class TempoTracker {
         const averageDifference = this.getAverageDifference();
 
         if (averageDifference === 0) {
-            return "--";
+            return "Tap!";
         }
 
         const beatsPerMinute: number = this.msPerMin / averageDifference;
