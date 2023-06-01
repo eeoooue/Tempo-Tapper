@@ -21,7 +21,7 @@ var TempoTracker = /** @class */ (function () {
                 return false;
             }
         }
-        return (100 < timeDiff && timeDiff < 3000);
+        return (200 <= timeDiff && timeDiff <= 2000);
     };
     TempoTracker.prototype.getAverageDifference = function () {
         var count = 0;
