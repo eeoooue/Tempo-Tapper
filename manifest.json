@@ -1,11 +1,11 @@
 {
-    "name": "BPM Finder",
+    "name": "Tempo Tapper",
     "version": "1.0.0",
     "description": "Tap the button to determine the beats per minute of a song!",
     "manifest_version": 3,
     "author": "eeoooue",
     "action": {
         "default_popup": "index.html",
-        "default_title": "BPM Finder"
+        "default_title": "Tempo Tapper"
     }
 }
